@@ -1,6 +1,6 @@
 import { PayloadRequest, Where } from '../types';
 import { Field, FieldAffectingData, TabAsField, UIField } from '../fields/config/types';
-import { CollectionPermission, FieldPermissions, GlobalPermission } from '../auth';
+import { CollectionPermission, GlobalPermission } from '../auth';
 import QueryError from '../errors/QueryError';
 import { parseParams } from './parseParams';
 
@@ -18,12 +18,11 @@ export type EntityPolicies = {
 export type PathToQuery = {
   complete: boolean
   collectionSlug?: string
+  globalSlug?: string
   path: string
   field: Field | TabAsField
   fields?: (FieldAffectingData | UIField | TabAsField)[]
-  fieldPolicies?: {
-    [field: string]: FieldPermissions
-  }
+  invalid?: boolean
 }
 
 type GetBuildQueryPluginArgs = {
@@ -34,7 +33,6 @@ type GetBuildQueryPluginArgs = {
 export type BuildQueryArgs = {
   req: PayloadRequest
   where: Where
-  overrideAccess: boolean
   access?: Where | boolean
   globalSlug?: string
 }
@@ -47,7 +45,7 @@ const getBuildQueryPlugin = ({
 }: GetBuildQueryPluginArgs = {}) => {
   return function buildQueryPlugin(schema) {
     const modifiedSchema = schema;
-    async function buildQuery({ req, where, overrideAccess = false, access, globalSlug }: BuildQueryArgs): Promise<Record<string, unknown>> {
+    async function buildQuery({ req, where, access, globalSlug }: BuildQueryArgs): Promise<Record<string, unknown>> {
       let fields = versionsFields;
       if (!fields) {
         if (globalSlug) {
@@ -61,18 +59,12 @@ const getBuildQueryPlugin = ({
       }
       const errors = [];
       const result = await parseParams({
-        policies: {
-          collections: {},
-          globals: {},
-        },
         collectionSlug,
         access,
-        errors,
         fields,
         globalSlug,
         req,
         where,
-        overrideAccess,
       });
 
       if (errors.length > 0) {
