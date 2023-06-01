@@ -30,7 +30,7 @@ const Root = () => (
       <WindowInfoProvider breakpoints={{
         xs: '(max-width: 400px)',
         s: '(max-width: 768px)',
-        m: '(max-width: 1024px)',
+        m: '(max-width: 1280px)',
         l: '(max-width: 1440px)',
       }}
       >
